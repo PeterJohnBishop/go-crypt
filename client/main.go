@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/xlzd/gotp"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -27,19 +26,13 @@ func generateUserID() string {
 
 func main() {
 
-	var displayName = "testClient1"
-	path := fmt.Sprintf("/ws/%s", displayName)
+	var alias = "anon81385"
+	path := fmt.Sprintf("/ws/%s", alias)
 
 	var id = generateUserID()
 
-	secretLength := 16
-	var secret = gotp.RandomSecret(secretLength)
-
-	// save userId and secret to a database
-
 	headers := http.Header{}
 	headers.Add("X-Client-Id", id)
-	headers.Add("X-Client-Secret", secret)
 
 	u := url.URL{Scheme: "ws", Host: "localhost:8080", Path: path}
 	log.Printf("connecting to %s", u.String())

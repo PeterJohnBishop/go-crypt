@@ -9,7 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/skip2/go-qrcode"
 	"github.com/xlzd/gotp"
 )
 
@@ -35,11 +34,12 @@ var upgrader = websocket.Upgrader{
 
 type Client struct {
 	id     string
-	name   string
+	alias  string
 	secret string
 	hub    *Hub
 	conn   *websocket.Conn
 	send   chan []byte
+	allow  []string
 }
 
 func (c *Client) readPump() {
@@ -102,18 +102,15 @@ func (c *Client) writePump() {
 	}
 }
 
-// generate a QR code for TOTP to send as a PNG
-func generateTOTPWithSecret(clientId string, clientSecret string) ([]byte, error) {
+// generate a uri for totp
+func generateTOTPWithSecret(clientId string, clientSecret string, alias string) string {
 	totp := gotp.NewDefaultTOTP(clientSecret)
 
-	uri := totp.ProvisioningUri(clientId, "encryptedMessanger")
+	issuer := fmt.Sprintf("direct_message:%s", alias)
 
-	png, err := qrcode.Encode(uri, qrcode.Medium, 256)
-	if err != nil {
-		return nil, err
-	}
+	uri := totp.ProvisioningUri(clientId, issuer)
 
-	return png, nil
+	return uri
 }
 
 // verify incomming OTP
@@ -127,31 +124,54 @@ func verifyOTP(randomSecret string, otp string) {
 	}
 }
 
+func GetSecretFromDB(id string) string {
+	return "under construction"
+}
+
 func ServeWs(hub *Hub, c *gin.Context) {
+
+	alias := c.Param("alias")
+	if alias == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Alias is required"})
+		return
+	}
+
+	id := c.GetHeader("X-Client-Id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "X-Client-Id header is missing"})
+		return
+	}
+
+	var secret string
+	var isNew bool
+
+	secret = GetSecretFromDB(id)
+	if secret != "" {
+		isNew = false
+	}
+
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	id := c.GetHeader("X-Client-Id")
-	if id == "" {
-		log.Println("Identifying header is missing.")
-		return
-	}
-
-	secret := c.GetHeader("X-Client-Secret")
 	if secret == "" {
-		log.Println("Shared secret header is missing.")
+		secretLength := 16
+		secret = gotp.RandomSecret(secretLength)
+		isNew = true
 	}
 
-	name := c.Param("name")
-	if name == "" {
-		log.Println("Display name is missing.")
-		return
+	if isNew {
+		data := generateTOTPWithSecret(id, secret, alias)
+		msg := map[string]string{
+			"type": "totp dm verification",
+			"data": data,
+		}
+		conn.WriteJSON(msg)
 	}
 
-	client := &Client{id: id, name: name, secret: secret, hub: hub, conn: conn, send: make(chan []byte, 256)}
+	client := &Client{id: id, alias: alias, secret: secret, hub: hub, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
 
 	go client.writePump()

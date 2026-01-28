@@ -12,5 +12,7 @@
 - when data arrives in the send channel the writePump sends that data to the websocket and off to the client app
 
 # totp
-- generate a secret 'room' key and email as a QR code
-- 
+- on websocket connect the client app generates a random id and random secret and sends these to the hub through request headers
+- client id and client secret are stored locally
+- the websocket client generates a totp uri and sends this via email as a PNG
+- the client id and client secret are stored in the hub 
