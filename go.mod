@@ -2,7 +2,10 @@ module go-crypt
 
 go 1.25.5
 
-require github.com/gin-gonic/gin v1.11.0
+require (
+	github.com/gin-gonic/gin v1.11.0
+	gorm.io/gorm v1.25.10
+)
 
 require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -11,8 +14,6 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/subosito/gotenv v1.6.0 // indirect
-	gorm.io/gorm v1.25.10 // indirect
 )
 
 require (
@@ -27,6 +28,7 @@ require (
 	github.com/go-playground/validator/v10 v10.27.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
+	github.com/gorilla/websocket v1.5.3
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
