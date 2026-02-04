@@ -1,4 +1,11 @@
-# channels and go routines and encryption and such
+# go-srv
+
+A Gin server with, 
+- a websocket connection that supports concurrent read write between clients
+- a webhook endpoint to handle generic payloads 
+- a directory event watcher
+- a postgres database with routes for secure user management
+- jwt authentication 
 
 # docker
 
